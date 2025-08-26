@@ -77,10 +77,15 @@ class GameController extends _$GameController {
     }
 
     // Create and shuffle the main deck of Archive cards.
-    final allArchiveCards = CardLibrary.cards.entries
+    final baseArchiveCards = CardLibrary.cards.entries
         .where((entry) => entry.value.type == CardType.Archive)
-        .map((entry) => entry.key).
-        toList();
+        .map((entry) => entry.key)
+        .toList();
+
+    final allArchiveCards = <CardIdentifier>[];
+    for (int i = 0; i < setup.deckMultiplier; i++) {
+      allArchiveCards.addAll(baseArchiveCards);
+    }
     allArchiveCards.shuffle();
 
     // Find all possible locations for the manuscript
@@ -354,15 +359,16 @@ class GameController extends _$GameController {
 
     var player = _currentPlayer;
 
+    if (player.hasUsedCharacterAbilityThisTurn) {
+      state = state.copyWith(userMessages: ["Ability already used this turn."]);
+      return;
+    }
+
     // Use a switch to handle different character abilities
     switch (player.characterId) {
       case CharacterIdentifier.drAlistairFinch:
         // Ability: Once per turn, spend 2 Insight to gain 1 Action.
         const insightCost = 2;
-        if (player.hasUsedCharacterAbilityThisTurn) {
-          state = state.copyWith(userMessages: ["Ability already used this turn."]);
-          return;
-        }
         if (player.insight < insightCost) {
           state = state.copyWith(userMessages: ["Requires 2 Insight."]);
           return;
@@ -377,10 +383,6 @@ class GameController extends _$GameController {
         break;
       case CharacterIdentifier.eleanorVance:
         // Ability: Once per turn, discard a card to draw a card.
-        if (player.hasUsedCharacterAbilityThisTurn) {
-          state = state.copyWith(userMessages: ["Ability already used this turn."]);
-          return;
-        }
         if (player.hand.isEmpty) {
           state = state.copyWith(userMessages: ["No cards in hand to discard."]);
           return;
@@ -394,10 +396,6 @@ class GameController extends _$GameController {
         break;
       case CharacterIdentifier.julianBlackwood:
         // Ability: Once per turn, trash a Madness card from your hand to gain 2 Insight.
-        if (player.hasUsedCharacterAbilityThisTurn) {
-          state = state.copyWith(userMessages: ["Ability already used this turn."]);
-          return;
-        }
 
         final hand = List<CardIdentifier>.from(player.hand);
         final madnessCardIndex = hand.indexWhere(
@@ -419,10 +417,6 @@ class GameController extends _$GameController {
         break;
       case CharacterIdentifier.mrSilasCroft:
         // Ability: Once per turn, gain 1 Insight and 1 Footwork.
-        if (player.hasUsedCharacterAbilityThisTurn) {
-          state = state.copyWith(userMessages: ["Ability already used this turn."]);
-          return;
-        }
 
         state = state.copyWith(userMessages: ["Used Ability: Gained 1 Insight and 1 Footwork."]);
         player = player.copyWith(
@@ -434,10 +428,6 @@ class GameController extends _$GameController {
       case CharacterIdentifier.adelaideHayes:
         // Ability: Once per turn, spend 2 Insight to draw 2 cards.
         const insightCost = 2;
-        if (player.hasUsedCharacterAbilityThisTurn) {
-          state = state.copyWith(userMessages: ["Ability already used this turn."]);
-          return;
-        }
         if (player.insight < insightCost) {
           state = state.copyWith(userMessages: ["Requires 2 Insight."]);
           return;

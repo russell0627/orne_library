@@ -124,20 +124,23 @@ class Player {
   }
 
   @override
-  int get hashCode => Object.hash(
-        health,
-        playerIndex,
-        characterId,
-        insight,
-        footwork,
-        actions,
-        x,
-        y,
-        handSize,
-        Object.hashAll(hand),
-        Object.hashAll(drawPile),
-        Object.hashAll(discardPile),
-        nextTurnFootworkBonus,
-        hasUsedCharacterAbilityThisTurn,
-      );
+  int get hashCode {
+    const listHash = ListEquality<CardIdentifier>();
+    return Object.hash(
+      health,
+      playerIndex,
+      characterId,
+      insight,
+      footwork,
+      actions,
+      x,
+      y,
+      handSize,
+      listHash.hash(hand),
+      listHash.hash(drawPile),
+      listHash.hash(discardPile),
+      nextTurnFootworkBonus,
+      hasUsedCharacterAbilityThisTurn,
+    );
+  }
 }

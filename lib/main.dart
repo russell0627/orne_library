@@ -9,6 +9,7 @@ import 'package:orne_library/src/screens/player_count_screen.dart';
 import 'package:orne_library/src/game/character_library.dart';
 import 'package:orne_library/src/game/game_status.dart';
 import 'package:orne_library/src/tile_grid/tile_grid.dart';
+import 'package:orne_library/src/game/player.dart';
 import 'package:orne_library/src/game/game_state.dart';
 import 'package:orne_library/src/game/tile_type.dart';
 import 'package:orne_library/src/game/tile_library.dart';
@@ -49,7 +50,8 @@ class TileGridDemoScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch the game state and get the controller.
-    final gameSetup = GameSetup(characterIds: characterIds);
+    final gameSetup =
+        GameSetup(characterIds: characterIds, deckMultiplier: 2);
     final gameState = ref.watch(gameControllerProvider(gameSetup));
     final gameController = ref.read(gameControllerProvider(gameSetup).notifier);
     final currentPlayer = gameState.players[gameState.currentPlayerIndex];
@@ -183,106 +185,51 @@ class TileGridDemoScreen extends ConsumerWidget {
 
                 return const SizedBox.shrink(); // Return empty space if no action
               }),
-              Builder(builder: (context) {
-                // Note: This could be refactored into a single widget to avoid repetition.
-                // Only show for Dr. Alistair Finch for now
-                if (currentPlayer.characterId == CharacterIdentifier.drAlistairFinch) {
-                  final canUseAbility = !currentPlayer.hasUsedCharacterAbilityThisTurn &&
-                      currentPlayer.insight >= 2;
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber.shade200,
-                      ),
-                      onPressed:
-                          canUseAbility ? gameController.useCharacterAbility : null,
-                      child: const Text('Use Character Ability'),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
-              Builder(builder: (context) {
-                // Only show for Eleanor Vance for now
-                if (currentPlayer.characterId == CharacterIdentifier.eleanorVance) {
-                  final canUseAbility = !currentPlayer.hasUsedCharacterAbilityThisTurn &&
-                      currentPlayer.hand.isNotEmpty;
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber.shade200,
-                      ),
-                      onPressed:
-                          canUseAbility ? gameController.useCharacterAbility : null,
-                      child: const Text('Use Character Ability'),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
-              Builder(builder: (context) {
-                // Only show for Julian Blackwood
-                if (currentPlayer.characterId == CharacterIdentifier.julianBlackwood) {
-                  final hasMadnessCard = currentPlayer.hand.any(
-                      (cardId) => CardLibrary.cards[cardId]!.type == CardType.Madness);
-                  final canUseAbility =
-                      !currentPlayer.hasUsedCharacterAbilityThisTurn && hasMadnessCard;
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber.shade200,
-                      ),
-                      onPressed:
-                          canUseAbility ? gameController.useCharacterAbility : null,
-                      child: const Text('Use Character Ability'),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
-              Builder(builder: (context) {
-                // Only show for Mr. Silas Croft
-                if (currentPlayer.characterId == CharacterIdentifier.mrSilasCroft) {
-                  final canUseAbility = !currentPlayer.hasUsedCharacterAbilityThisTurn;
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber.shade200,
-                      ),
-                      onPressed:
-                          canUseAbility ? gameController.useCharacterAbility : null,
-                      child: const Text('Use Character Ability'),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
-              Builder(builder: (context) {
-                // Only show for Adelaide Hayes
-                if (currentPlayer.characterId == CharacterIdentifier.adelaideHayes) {
-                  final canUseAbility = !currentPlayer.hasUsedCharacterAbilityThisTurn &&
-                      currentPlayer.insight >= 2;
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber.shade200,
-                      ),
-                      onPressed:
-                          canUseAbility ? gameController.useCharacterAbility : null,
-                      child: const Text('Use Character Ability'),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
+              _buildCharacterAbilityButton(currentPlayer, gameController),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  /// Builds the character-specific ability button if applicable.
+  Widget _buildCharacterAbilityButton(
+      Player currentPlayer, GameController gameController) {
+    bool canUseAbility = false;
+    String buttonText = 'Use Character Ability';
+    Color buttonColor = Colors.amber.shade200;
+
+    switch (currentPlayer.characterId) {
+      case CharacterIdentifier.drAlistairFinch:
+      case CharacterIdentifier.adelaideHayes:
+        canUseAbility = !currentPlayer.hasUsedCharacterAbilityThisTurn &&
+            currentPlayer.insight >= 2;
+        break;
+      case CharacterIdentifier.eleanorVance:
+        canUseAbility = !currentPlayer.hasUsedCharacterAbilityThisTurn &&
+            currentPlayer.hand.isNotEmpty;
+        break;
+      case CharacterIdentifier.julianBlackwood:
+        final hasMadnessCard = currentPlayer.hand.any(
+            (cardId) => CardLibrary.cards[cardId]!.type == CardType.Madness);
+        canUseAbility = !currentPlayer.hasUsedCharacterAbilityThisTurn && hasMadnessCard;
+        break;
+      case CharacterIdentifier.mrSilasCroft:
+        canUseAbility = !currentPlayer.hasUsedCharacterAbilityThisTurn;
+        break;
+      default:
+        return const SizedBox.shrink(); // No specific ability button for other characters
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: buttonColor,
+        ),
+        onPressed: canUseAbility ? gameController.useCharacterAbility : null,
+        child: Text(buttonText),
       ),
     );
   }

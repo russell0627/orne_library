@@ -8,17 +8,23 @@ import 'package:orne_library/src/game/character_identifier.dart';
 /// Riverpod family modifiers.
 class GameSetup {
   final List<CharacterIdentifier> characterIds;
+  final int deckMultiplier;
 
-  const GameSetup({required this.characterIds});
+  const GameSetup({
+    required this.characterIds,
+    this.deckMultiplier = 1,
+  });
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
     return other is GameSetup &&
+        other.deckMultiplier == deckMultiplier &&
         const ListEquality().equals(other.characterIds, characterIds);
   }
 
   @override
-  int get hashCode => const ListEquality().hash(characterIds);
+  int get hashCode =>
+      Object.hash(const ListEquality().hash(characterIds), deckMultiplier);
 }
